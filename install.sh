@@ -21,8 +21,8 @@ fi
 
 # Reject crostini.
 if [[ -d /opt/google/cros-containers && "${CREW_FORCE_INSTALL}" != '1' ]]; then
-  echo_error "Crostini containers are not supported by Chromebrew :/"
-  echo_info "Run 'CREW_FORCE_INSTALL=1 exec bash --init-file <(curl -Ls git.io/vddgY)' to perform install anyway"
+  echo_error "Crostini containers are not supported by Chromebrew hehe sux to be u"
+  echo_info "u can try to force install with 'CREW_FORCE_INSTALL=1 exec bash --init-file <(curl -Ls git.io/vddgY)' but it wont work"
   exit 1
 fi
 
@@ -42,17 +42,17 @@ fi
 # Check if the user is on ChromeOS v117+ and not in the VT-2 console, as sudo will not work.
 : "${CREW_PREFIX:=/usr/local}"
 if [[ "$(stat -c '%u' "${CREW_PREFIX}")" == "$(id -u)" ]] && sudo 2>&1 | grep -q 'no new privileges'; then
-  echo_error "Please run the installer in the VT-2 shell."
-  echo_info "To start the VT-2 session, type Ctrl + Alt + ->"
+  echo_error "It don't no work in here cause sudo dont work."
+  echo_info "Go to VT-2 with Ctrl + Alt + ->"
   exit 1
 fi
 
 # Make sure installation directory is clean.
 if [ -d "${CREW_PREFIX}" ]; then
   if [ "$(ls -A "${CREW_PREFIX}")" ]; then
-    echo_error "${CREW_PREFIX} is not empty, would you like it to be cleared?"
-    echo_info "This will delete ALL files in ${CREW_PREFIX}!"
-    echo_info "Continue?"
+    echo_error "${CREW_PREFIX} has stuf. Delete the stuf?"
+    echo_info "Im gonna delete the stuf in ${CREW_PREFIX}."
+    echo_info "Choose yes if youre cool"
     select continue in "Yes" "No"; do
       if [[ "${continue}" == "Yes" ]]; then
         sudo find "${CREW_PREFIX}" -mindepth 1 -delete
@@ -105,9 +105,10 @@ fi
 # The easiest way to distinguish StoneyRidge platorms is to check for the FMA4
 # instruction, as it was first introduced in Bulldozer and later dropped in Zen.
 if grep -s "fma4" /proc/cpuinfo ; then
-  echo_info "Notice: You are running an AMD StoneyRidge device; due to some bugs some packages may fail with a segmentation fault and need to be rebuilt."
-  echo_info "If this happens, please report them to: https://github.com/chromebrew/chromebrew/issues"
-  echo_info "If the install fails, try running 'CREW_AMD_INSTALL=1 exec bash --init-file <(curl -Ls git.io/vddgY)'"
+  echo_info "Notice: You are running an AMD StoneyRidge device; due to some bugs some packages may die and show a segmentation fault."
+  echo_info "If this happens, get better and report to: https://github.com/chromebrew/chromebrew/issues"
+  echo_info "If the install fails, l bozo."
+  echo_info "Running 'CREW_AMD_INSTALL=1 exec bash --init-file <(curl -Ls git.io/vddgY)' might work tho"
   if [ "${CREW_AMD_INSTALL}" == "1" ]; then
     # Otherwise one may get segfaults during install on stoneyridge devices.
     # See https://github.com/chromebrew/chromebrew/issues/8823
@@ -115,12 +116,13 @@ if grep -s "fma4" /proc/cpuinfo ; then
   fi
 fi
 
-echo_success "Welcome to Chromebrew!"
+echo_success "yo wasup"
 
 # Prompt user to enter the sudo password if it is set.
 # If the PASSWD_FILE specified by chromeos-setdevpasswd exist, that means a sudo password is set.
 if [[ "$(< /usr/sbin/chromeos-setdevpasswd)" =~ PASSWD_FILE=\'([^\']+) ]] && [ -f "${BASH_REMATCH[1]}" ]; then
-  echo_intra "Please enter the developer mode password."
+  echo_intra "Please type your password."
+  echo_intra "For security reasons, this may get sent to the FBI in case you commit a crime and they feel like messing up ur socials."
   # Reset sudo timeout.
   sudo -k
   sudo /bin/true
@@ -143,7 +145,7 @@ function curl () {
     echo_info "Retrying, $((3-i)) retries left."
   done
   # The download failed if we're still here.
-  echo_error "Download failed :/ Please check your network settings."
+  echo_error "Download failed :/ l bozo."
   return 1
 }
 
@@ -167,7 +169,10 @@ BOOTSTRAP_PACKAGES="zstd crew_mvdir ruby git ca_certificates openssl"
 
 if [[ -n "${CHROMEOS_RELEASE_CHROME_MILESTONE}" ]] && (( "${CHROMEOS_RELEASE_CHROME_MILESTONE}" > "112" )); then
   # Append the correct packages for systems running v113 onwards.
-  #BOOTSTRAP_PACKAGES+=' glibc_lib235 zlibpkg gmp'
+  BOOTSTRAP_PACKAGES+=' glibc_lib235 zlibpkg gmp'
+  echo "LD_LIBRARY_PATH=/lib64" >> "$CREW_PREFIX"/etc/env.d/00-library
+  export LD_LIBRARY_PATH="/lib64"
+
 
   # Recent Arm systems have a cut down system.
   [[ "${ARCH}" == "armv7l" ]] && BOOTSTRAP_PACKAGES+=' bzip2 ncurses readline pcre2 gcc_lib'
@@ -175,7 +180,7 @@ fi
 
 # Create the device.json file.
 cd "${CREW_CONFIG_PATH}"
-echo_info "\nCreating device.json."
+echo_info "\n/summon device.json."
 jq --arg key0 'architecture' --arg value0 "${ARCH}" \
   --arg key1 'installed_packages' \
   '. | .[$key0]=$value0 | .[$key1]=[]' <<<'{}' > device.json
@@ -197,7 +202,7 @@ function download_check () {
         return
         ;;
       *)
-        echo_error "Verification of cached ${1} failed, downloading."
+        echo_error "Verification of cached ${1} failed lol, downloading."
       esac
     fi
     # Download
@@ -215,7 +220,7 @@ function download_check () {
       return
       ;;
     *)
-      echo_error "Verification failed, something may be wrong with the download."
+      echo_error "Verification failed. /kill @s."
       exit 1;;
     esac
 }
@@ -243,12 +248,12 @@ function extract_install () {
 
 function update_device_json () {
   cd "${CREW_CONFIG_PATH}"
-  echo_intra "Adding new information on ${1} to device.json..."
+  echo_intra "Adding stuf on ${1} to device.json..."
   new_info=$(jq --arg name "$1" --arg version "$2" --arg sha256 "$3" '.installed_packages |= . + [{"name": $name, "version": $version, "binary_sha256": $sha256}]' device.json)
   cat <<< "${new_info}" > device.json
 }
 
-echo_info "Downloading Bootstrap packages...\n"
+echo_info "Downloading Bootstrap stuf...\n"
 # Extract, install and register packages.
 for package in $BOOTSTRAP_PACKAGES; do
   cd "${CREW_LIB_PATH}/packages"
@@ -269,7 +274,7 @@ done
 # shellcheck disable=SC2024
 sudo ldconfig &> /tmp/crew_ldconfig || true
 
-echo_out "\nCreating symlink to 'crew' in ${CREW_PREFIX}/bin/"
+echo_out "\nMaking symlink to 'crew' in ${CREW_PREFIX}/bin/"
 ln -sfv "../lib/crew/bin/crew" "${CREW_PREFIX}/bin/"
 
 echo_out "Set up and synchronize local package repo..."
@@ -277,8 +282,8 @@ echo_out "Set up and synchronize local package repo..."
 # Set LD_LIBRARY_PATH so crew doesn't break on i686, xz doesn't fail on
 # x86_64, and the mandb postinstall doesn't fail in newer arm
 # containers.
-echo "LD_LIBRARY_PATH=$CREW_PREFIX/lib${LIB_SUFFIX}:/lib${LIB_SUFFIX}" >> "$CREW_PREFIX"/etc/env.d/00-library
-export LD_LIBRARY_PATH="${CREW_PREFIX}/lib${LIB_SUFFIX}:/lib${LIB_SUFFIX}"
+# echo "LD_LIBRARY_PATH=$CREW_PREFIX/lib${LIB_SUFFIX}:/lib${LIB_SUFFIX}" >> "$CREW_PREFIX"/etc/env.d/00-library
+# export LD_LIBRARY_PATH="${CREW_PREFIX}/lib${LIB_SUFFIX}:/lib${LIB_SUFFIX}"
 
 echo "export CREW_PREFIX=${CREW_PREFIX}" >> "${CREW_PREFIX}/etc/env.d/profile"
 
@@ -290,18 +295,18 @@ echo_info "Installing core Chromebrew packages...\n"
 yes | crew install pixz
 yes | crew install core
 
-echo_info "\nRunning Bootstrap package postinstall scripts...\n"
+echo_info "\nDoing the stuf that has to be done after the bootstrap...\n"
 # Due to a bug in crew where it accepts spaces in package files names rather than
 # splitting strings at spaces, we cannot quote ${BOOTSTRAP_PACKAGES}.
 # shellcheck disable=SC2086
 crew postinstall ${BOOTSTRAP_PACKAGES}
 
 if ! "${CREW_PREFIX}"/bin/git version &> /dev/null; then
-  echo_error "\nGit is broken on your system, and crew update will not work properly."
-  echo_error "Please report this here:"
+  echo_error "\nGit is broken. Get a better computer."
+  echo_error "Report here:"
   echo_error "https://github.com/chromebrew/chromebrew/issues\n\n"
 else
-  echo_info "Synchronizng local package repo..."
+  echo_info "Syncing. Wait..."
 
   cd "${CREW_LIB_PATH}"
 
@@ -344,14 +349,9 @@ echo "                       . .
              'NMWNXXKK000000KKXNNMMX.
              .;okk0XNWWMMMMWWNKOkdc'.
                 .....'cc:cc:''..."
-echo "  ___ _                               _
- / (_)|\                              |\\
-|     ||__    ,_    __  _  _  _    __ |/_  ,_    __  _   _   _
-|     |/  |  /  |  /  \/ |/ |/ |  |_/ |  \/  |  |_/ /|   |   |\_
- \___/|   |_/   |_/\__/  |  |  |_/|__/\__/   |_/|__/  \_/ \_/
-"
+echo "beer."
 
-echo_info "Please run 'source ~/.bashrc' to set up the profile environment."
+echo_info "Do 'source ~/.bashrc' to do the environment stuf."
 
 echo_intra "
 Edit ${CREW_PREFIX}/etc/env.d/03-pager to change the default PAGER.
@@ -359,4 +359,4 @@ most is used by default
 You may wish to edit the ${CREW_PREFIX}/etc/env.d/02-editor file for an editor default.
 Chromebrew provides nano, vim and emacs as default TUI editor options."
 
-echo_success "Chromebrew installed successfully and package lists updated."
+echo_success "it worked."
