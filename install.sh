@@ -169,10 +169,7 @@ BOOTSTRAP_PACKAGES="zstd crew_mvdir ruby git ca_certificates openssl"
 
 if [[ -n "${CHROMEOS_RELEASE_CHROME_MILESTONE}" ]] && (( "${CHROMEOS_RELEASE_CHROME_MILESTONE}" > "112" )); then
   # Append the correct packages for systems running v113 onwards.
-  BOOTSTRAP_PACKAGES+=' glibc_lib235 zlibpkg gmp'
-  echo "LD_LIBRARY_PATH=/lib64" >> "$CREW_PREFIX"/etc/env.d/00-library
-  export LD_LIBRARY_PATH="/lib64"
-
+  BOOTSTRAP_PACKAGES+=' sommelier zlibpkg gmp'
 
   # Recent Arm systems have a cut down system.
   [[ "${ARCH}" == "armv7l" ]] && BOOTSTRAP_PACKAGES+=' bzip2 ncurses readline pcre2 gcc_lib'
@@ -282,8 +279,8 @@ echo_out "Set up and synchronize local package repo..."
 # Set LD_LIBRARY_PATH so crew doesn't break on i686, xz doesn't fail on
 # x86_64, and the mandb postinstall doesn't fail in newer arm
 # containers.
-# echo "LD_LIBRARY_PATH=$CREW_PREFIX/lib${LIB_SUFFIX}:/lib${LIB_SUFFIX}" >> "$CREW_PREFIX"/etc/env.d/00-library
-# export LD_LIBRARY_PATH="${CREW_PREFIX}/lib${LIB_SUFFIX}:/lib${LIB_SUFFIX}"
+echo "LD_LIBRARY_PATH=$CREW_PREFIX/lib${LIB_SUFFIX}:/lib${LIB_SUFFIX}" >> "$CREW_PREFIX"/etc/env.d/00-library
+export LD_LIBRARY_PATH="${CREW_PREFIX}/lib${LIB_SUFFIX}:/lib${LIB_SUFFIX}"
 
 echo "export CREW_PREFIX=${CREW_PREFIX}" >> "${CREW_PREFIX}/etc/env.d/profile"
 
